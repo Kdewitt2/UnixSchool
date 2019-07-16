@@ -1,0 +1,42 @@
+#!bin/bash
+#Make all three files used 
+who | awk '{print $1;}' > whoWas
+who | awk '{print $1;}' > whoActive
+who | awk '{print $1;}' > whoIs
+#sleep 60
+
+#Loop for 60 seconds
+for i in {1..6}
+do
+    #Get current users
+    who | awk '{print $1;}' > whoIs
+    #For each that was logged in
+    for USR in whoWas
+    do
+        #Check if usr is still logged in
+        if grep -Fxq "$USR" whoIs then
+            #Move user to Active and delete them from both lists
+            echo $USR >> whoActive
+            sed -i "/$USR/d" ./whoWas
+            sed -i "/$USR/d" ./whoIs
+        fi
+    done
+
+    #Users that were logged in but are not still logged in    
+    echo "The users that logged out are:"
+    cat whoWas
+    #Users that weren't logged in but are now logged in
+    echo "The users that logged in are:"
+    cat whoIs
+
+    #Copy new users into active users
+    cat whoIs >> whoActive
+    #Turn active users into old users
+    cp whoActive whoWas
+    
+    #Clear new and active users for next iteration
+    echo ""
+    echo "" > whoActive
+    echo "" > whoIs
+    sleep 10
+done    
